@@ -65,7 +65,7 @@ const authOptions = {
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password as string,
-          user.password
+          user.passwordHash
         );
 
         if (!isPasswordValid) {
