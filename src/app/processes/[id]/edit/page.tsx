@@ -8,6 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import BpmnCanvas from '@/components/modeler/bpmn-canvas';
+import BpmnPalette from '@/components/modeler/bpmn-palette';
+import BpmnToolbar from '@/components/modeler/bpmn-toolbar';
+import BpmnPropertiesPanel from '@/components/modeler/bpmn-properties-panel';
+import { useModelerStore } from '@/store/modeler-store';
 
 const CATEGORIES = [
   { value: '', label: 'Select Category' },
@@ -41,6 +47,9 @@ export default function EditProcessPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('modeler');
+
+  const { setProcessName, nodes, connections, setDirty } = useModelerStore();
 
   useEffect(() => {
     async function fetchProcess() {
@@ -53,6 +62,7 @@ export default function EditProcessPage() {
         setCategory(data.category || '');
         setStatus(data.status);
         setTags(data.tags ? (typeof data.tags === 'string' ? JSON.parse(data.tags) : data.tags).join(', ') : '');
+        setProcessName(data.name);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Failed to load process');
       } finally {
@@ -60,10 +70,9 @@ export default function EditProcessPage() {
       }
     }
     fetchProcess();
-  }, [id]);
+  }, [id, setProcessName]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSave() {
     if (!name.trim()) {
       setError('Process name is required');
       return;
@@ -90,7 +99,7 @@ export default function EditProcessPage() {
         throw new Error(data.error || 'Failed to update process');
       }
 
-      router.push(`/processes/${id}`);
+      setDirty(false);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -107,73 +116,98 @@ export default function EditProcessPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          Back
+    <div className="flex h-[calc(100vh-8rem)] flex-col">
+      {/* Top bar */}
+      <div className="flex items-center justify-between border-b px-4 py-2">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => router.push(`/processes/${id}`)}>
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-lg font-semibold text-gray-900">{name || 'Edit Process'}</h1>
+        </div>
+        <Button onClick={handleSave} loading={saving} size="sm">
+          <Save className="mr-1 h-4 w-4" />
+          Save
         </Button>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900">Edit Process</h1>
+      {error && (
+        <div className="mx-4 mt-2 rounded-md bg-red-50 p-2 text-sm text-red-700 border border-red-200">
+          {error}
+        </div>
+      )}
 
-      <Card>
-        <CardContent className="p-6">
-          {error && (
-            <div className="mb-6 rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
-              {error}
-            </div>
-          )}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col overflow-hidden">
+        <div className="border-b px-4">
+          <TabsList>
+            <TabsTrigger value="modeler">BPMN Modeler</TabsTrigger>
+            <TabsTrigger value="details">Details</TabsTrigger>
+          </TabsList>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Process Name *
-              </label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
+        <TabsContent value="modeler" className="flex flex-1 flex-col overflow-hidden m-0">
+          <BpmnToolbar onSave={handleSave} />
+          <div className="flex flex-1 overflow-hidden">
+            <BpmnPalette />
+            <BpmnCanvas />
+            <BpmnPropertiesPanel />
+          </div>
+        </TabsContent>
 
-            <div>
-              <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Description
-              </label>
-              <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
-            </div>
+        <TabsContent value="details" className="flex-1 overflow-y-auto p-6 m-0">
+          <div className="mx-auto max-w-2xl">
+            <Card>
+              <CardContent className="p-6">
+                <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+                  <div>
+                    <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-gray-700">
+                      Process Name *
+                    </label>
+                    <Input id="name" value={name} onChange={(e) => { setName(e.target.value); setProcessName(e.target.value); }} required />
+                  </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="category" className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Category
-                </label>
-                <Select options={CATEGORIES} value={category} onChange={(e) => setCategory(e.target.value)} />
-              </div>
-              <div>
-                <label htmlFor="status" className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Status
-                </label>
-                <Select options={STATUS_OPTIONS} value={status} onChange={(e) => setStatus(e.target.value)} />
-              </div>
-            </div>
+                  <div>
+                    <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-gray-700">
+                      Description
+                    </label>
+                    <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
+                  </div>
 
-            <div>
-              <label htmlFor="tags" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Tags
-              </label>
-              <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Comma-separated tags" />
-            </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor="category" className="mb-1.5 block text-sm font-medium text-gray-700">
+                        Category
+                      </label>
+                      <Select options={CATEGORIES} value={category} onChange={(e) => setCategory(e.target.value)} />
+                    </div>
+                    <div>
+                      <label htmlFor="status" className="mb-1.5 block text-sm font-medium text-gray-700">
+                        Status
+                      </label>
+                      <Select options={STATUS_OPTIONS} value={status} onChange={(e) => setStatus(e.target.value)} />
+                    </div>
+                  </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button type="submit" loading={saving}>
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </Button>
-              <Button type="button" variant="outline" onClick={() => router.back()}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                  <div>
+                    <label htmlFor="tags" className="mb-1.5 block text-sm font-medium text-gray-700">
+                      Tags
+                    </label>
+                    <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Comma-separated tags" />
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <Button type="submit" loading={saving}>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
