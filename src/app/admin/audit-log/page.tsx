@@ -37,7 +37,7 @@ const RESOURCE_OPTIONS = [
 const ACTION_VARIANT: Record<string, string> = {
   CREATE: 'success',
   UPDATE: 'info',
-  DELETE: 'destructive',
+  DELETE: 'danger',
   LOGIN: 'default',
 };
 
@@ -145,7 +145,7 @@ export default function AdminAuditLogPage() {
                           : 'System'}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={ACTION_VARIANT[log.action] as 'success' | 'info' | 'destructive' | 'default' || 'default'}>
+                        <Badge variant={ACTION_VARIANT[log.action] as 'success' | 'info' | 'danger' | 'default' || 'default'}>
                           {log.action}
                         </Badge>
                       </TableCell>
