@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { Suspense, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -38,6 +38,14 @@ const STATUS_COLORS: Record<ProcessStatus, string> = {
 };
 
 export default function RepositoryPage() {
+  return (
+    <Suspense>
+      <RepositoryPageContent />
+    </Suspense>
+  );
+}
+
+function RepositoryPageContent() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get('status') || '';
 
