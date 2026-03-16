@@ -170,7 +170,7 @@ export default function GovernanceWorkflowsPage() {
 
       {/* Create Modal */}
       {showModal && (
-        <Modal title="New Governance Workflow" onClose={() => setShowModal(false)}>
+        <Modal open={showModal} title="New Governance Workflow" onClose={() => setShowModal(false)}>
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">Name *</label>

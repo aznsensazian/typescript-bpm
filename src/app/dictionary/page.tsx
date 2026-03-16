@@ -204,7 +204,7 @@ export default function DictionaryPage() {
       )}
 
       {showModal && (
-        <Modal title="Add Dictionary Entry" onClose={() => setShowModal(false)}>
+        <Modal open={showModal} title="Add Dictionary Entry" onClose={() => setShowModal(false)}>
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">Term *</label>
