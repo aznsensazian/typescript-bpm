@@ -138,7 +138,7 @@ export default function EditProcessPage() {
         </div>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col overflow-hidden">
+      <Tabs defaultValue="modeler" value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col overflow-hidden">
         <div className="border-b px-4">
           <TabsList>
             <TabsTrigger value="modeler">BPMN Modeler</TabsTrigger>
